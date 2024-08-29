@@ -42,21 +42,21 @@ public class AlgoritmoAStar : MonoBehaviour
         todasCelulas.RemoveAll(celula => celula == null);
         foreach (var celula in componentePaiDasCelulas.GetComponentsInChildren<Celula>()) {
             todasCelulas.Add(celula);
-            if (celula.isInicio) {
-                celulaInicial = celula;
-            }
-            if (celula.isFim) {
-                celulaFinal = celula;
-            }
-            celula.GetComponent<SpriteRenderer>().color = corPadraoCelula;
-            celula.isObstaculo = false;
+
+            if (celula.isInicio) celulaInicial = celula;
+            if (celula.isFim) celulaFinal = celula;
+
+            celula.SetarIsObstaculo(false);
         }
 
         celulaInicial.GetComponent<SpriteRenderer>().color = Color.red;
         celulaFinal.GetComponent<SpriteRenderer>().color = Color.red;
 
-        // StartCoroutine(CalcularDistancias());
         CalcularDistancias();
+
+        iniciado = false;
+        botaoIniciar.enabled = true;
+        botaoResetar.enabled = true;
     }
 
     public void CalcularDistancias() {
@@ -71,22 +71,23 @@ public class AlgoritmoAStar : MonoBehaviour
             // celulaAtual.GetComponent<SpriteRenderer>().color = Color.gray;
 
             foreach (var vizinho in celulaAtual.vizinhos) {
-                if (celulasVisitadas.Contains(vizinho) || vizinho.isObstaculo) {
+                if (celulasVisitadas.Contains(vizinho)) {
                     continue;
                 }
                 // vizinho.GetComponent<SpriteRenderer>().color = Color.cyan;
-
-                vizinho.custoRestante = celulaAtual.custoRestante + 1;
 
                 vizinho.custoTotal = 0;
                 vizinho.celulaPai = null;
                 vizinho.custoAcumulado = 0;
 
-                celulasParaVisitar.Enqueue(vizinho);
+                if (vizinho.isObstaculo) {
+                    vizinho.custoRestante = 0;
+                } else {
+                    vizinho.custoRestante = celulaAtual.custoRestante + 1;
+                    celulasParaVisitar.Enqueue(vizinho);
+                }
             }
             celulasVisitadas.Add(celulaAtual);
-
-            // yield return StartCoroutine(Sleep(1));
         }
     }
 
@@ -94,6 +95,8 @@ public class AlgoritmoAStar : MonoBehaviour
         if (iniciado) {
             return;
         }
+
+        CalcularDistancias();
 
         textoCustoTotal.text = "Custo total: ";
         encontrouMelhorCaminho = false;
@@ -128,21 +131,19 @@ public class AlgoritmoAStar : MonoBehaviour
 
             // Adiciona os vizinhos da celula inicial na lista aberta
             foreach (var vizinho in celulaAtual.vizinhos) {
-                if (listaFechada.Contains(vizinho) || vizinho.isObstaculo) {
-                    continue;
-                }
+                if (!listaFechada.Contains(vizinho) && !vizinho.isObstaculo) {
+                    if (vizinho != celulaInicial && vizinho != celulaFinal) {
+                        vizinho.GetComponent<SpriteRenderer>().color = Color.cyan;
+                    }
 
-                if (vizinho != celulaInicial && vizinho != celulaFinal) {
-                    vizinho.GetComponent<SpriteRenderer>().color = Color.cyan;
-                }
+                    // calcula o custo acumulado do vizinho se ele ainda não foi visitado
+                    if (!listaAberta.Contains(vizinho)) {
+                        vizinho.celulaPai = celulaAtual;
+                        vizinho.custoAcumulado = vizinho.celulaPai.custoAcumulado + 1;
+                    }
 
-                // calcula o custo acumulado do vizinho se ele ainda não foi visitado
-                if (vizinho.celulaPai == null && !listaAberta.Contains(vizinho)) {
-                    vizinho.celulaPai = celulaAtual;
-                    vizinho.custoAcumulado = vizinho.celulaPai.custoAcumulado + 1;
+                    listaAberta.Add(vizinho);
                 }
-
-                listaAberta.Add(vizinho);
             }
 
             listaFechada.Add(celulaAtual);
@@ -156,7 +157,7 @@ public class AlgoritmoAStar : MonoBehaviour
                 break;
             }
 
-            yield return StartCoroutine(Sleep(0.1f));
+            yield return StartCoroutine(Sleep(0.05f));
         }
 
         if (encontrouMelhorCaminho) {
@@ -167,7 +168,7 @@ public class AlgoritmoAStar : MonoBehaviour
         listaFechada.Clear();
 
         iniciado = false;
-        botaoIniciar.enabled = true;
+        botaoIniciar.enabled = false;
         botaoResetar.enabled = true;
     }
 
@@ -177,6 +178,9 @@ public class AlgoritmoAStar : MonoBehaviour
         // encontra o caminho retornando pelos pai da celula atual
         Celula celulaPonteiro = celulaFinal;
         while (celulaPonteiro != null) {
+            if (celulaPonteiro.isObstaculo) {
+                break;
+            }
             celulasMelhorCaminho.Add(celulaPonteiro);
             celulaPonteiro = celulaPonteiro.celulaPai;
         }
@@ -199,8 +203,7 @@ public class AlgoritmoAStar : MonoBehaviour
                     if (celula.isInicio || celula.isFim) {
                         return;
                     }
-                    celula.SetIsObstaculo(!celula.isObstaculo);
-                    CalcularDistancias();
+                    celula.SetarIsObstaculo(!celula.isObstaculo);
                 }
             }
         }
