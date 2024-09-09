@@ -39,7 +39,7 @@ public class AlgoritmoAStar : MonoBehaviour
         textoCustoTotal.text = "Custo total: ";
         encontrouMelhorCaminho = false;
 
-        todasCelulas.RemoveAll(celula => celula == null);
+        todasCelulas.RemoveAll(celula => celula != null);
         foreach (var celula in componentePaiDasCelulas.GetComponentsInChildren<Celula>()) {
             todasCelulas.Add(celula);
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class Celula : MonoBehaviour
@@ -26,9 +27,9 @@ public class Celula : MonoBehaviour
             if (outraCelula == this) {
                 continue;
             }
-            float distancia = Vector2.Distance(transform.position, outraCelula.transform.position);
+            float distancia = Mathf.Ceil(Vector2.Distance(transform.position, outraCelula.transform.position));
             if (distancia == 1f) {
-                // Debug.Log($"distancia do {nome} para {outraCelula.nome} :: {distancia}");
+                // Debug.Log($"distancia do {name} para {outraCelula.name} :: {distancia}");
                 vizinhos.Add(outraCelula.GetComponent<Celula>());
             }
         }
